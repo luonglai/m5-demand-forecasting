@@ -1,0 +1,54 @@
+name: Deploy to Databricks
+
+# Runs after CI passes on main, or manually (choose the target and whether to run the job).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Bundle target (dev = Free Edition, azure = Azure Databricks)
+        default: dev
+        type: choice
+        options: [dev, azure]
+      run_job:
+        description: Run the forecasting job after deploying
+        default: false
+        type: boolean
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      TARGET: ${{ inputs.target || 'dev' }}
+      DATABRICKS_HOST: ${{ (inputs.target == 'azure') && secrets.AZURE_DATABRICKS_HOST || secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ (inputs.target == 'azure') && secrets.AZURE_DATABRICKS_TOKEN || secrets.DATABRICKS_TOKEN }}
+    steps:
+      - name: Check Databricks secrets are configured
+        id: secrets
+        run: |
+          if [ -z "$DATABRICKS_HOST" ] || [ -z "$DATABRICKS_TOKEN" ]; then
+            echo "No Databricks secrets configured; skipping deployment."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: actions/checkout@v4
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: steps.secrets.outputs.ok == 'true'
+        run: pip install build
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: databricks/setup-cli@main
+      - name: Deploy bundle (builds the wheel, uploads code and job)
+        if: steps.secrets.outputs.ok == 'true'
+        run: databricks bundle deploy -t "$TARGET"
+      - name: Run forecasting job
+        if: steps.secrets.outputs.ok == 'true' && inputs.run_job
+        run: databricks bundle run m5_forecasting -t "$TARGET"

@@ -1,0 +1,63 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Pipeline: synthetic data (1 min)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "m5fc.pipeline",
+      "args": ["--config", "conf/synthetic.yml", "--stage", "all"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Pipeline: real data, store CA_1 (10-15 min)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "m5fc.pipeline",
+      "args": ["--config", "conf/local_ca1.yml", "--stage", "all"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Pipeline: real data, one stage (CA_1)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "m5fc.pipeline",
+      "args": ["--config", "conf/local_ca1.yml", "--stage", "${input:stage}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Pipeline: real data, all FOODS stores (long, 8-12 GB RAM)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "m5fc.pipeline",
+      "args": ["--config", "conf/local.yml", "--stage", "all"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Generate synthetic data",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "m5fc.synthetic",
+      "args": ["--out", "data/synthetic/raw"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "stage",
+      "type": "pickString",
+      "description": "Which stage to run",
+      "options": ["bronze", "silver", "gold", "baseline", "ml", "evaluate", "inventory", "report"],
+      "default": "report"
+    }
+  ]
+}

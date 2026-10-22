@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.databricks/
+spark-warehouse/
+metastore_db/
+derby.log
+# data stays out of git (Kaggle licence + size); synthetic data is generated on demand
+data/
+results/synthetic/

@@ -1,0 +1,39 @@
+# Databricks Asset Bundle: builds the m5fc wheel and deploys the forecasting job.
+#   databricks bundle validate -t dev
+#   databricks bundle deploy   -t dev
+#   databricks bundle run m5_forecasting -t dev
+bundle:
+  name: m5-demand-forecasting
+
+include:
+  - resources/*.yml
+
+artifacts:
+  m5fc:
+    type: whl
+    build: python -m build --wheel
+    path: .
+
+sync:
+  include:
+    - conf/*.yml
+
+targets:
+  # Databricks Free Edition workspace (serverless). Host and token come from
+  # DATABRICKS_HOST / DATABRICKS_TOKEN or a CLI profile.
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-1ced9d04-62d0.cloud.databricks.com
+
+  # Azure Databricks workspace (e.g. on the Azure Databricks free trial).
+  azure:
+    mode: development
+    workspace:
+      host: ${var.azure_host}
+
+variables:
+  azure_host:
+    description: Azure Databricks workspace URL, e.g. https://adb-1234567890123456.7.azuredatabricks.net
+    default: https://adb-0000000000000000.0.azuredatabricks.net

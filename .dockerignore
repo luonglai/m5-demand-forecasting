@@ -1,0 +1,11 @@
+data
+results
+.git
+.venv
+venv
+dist
+build
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.databricks

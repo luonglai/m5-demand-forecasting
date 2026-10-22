@@ -1,0 +1,91 @@
+# One task per pipeline stage. The statistical baseline and LightGBM run in parallel.
+#
+#   setup -> bronze -> silver -> gold -> baseline --> evaluate -> inventory -> report
+#                                    \-> ml -------/
+resources:
+  jobs:
+    m5_forecasting:
+      name: m5-demand-forecasting
+      max_concurrent_runs: 1
+      parameters:
+        - name: config
+          default: ${workspace.file_path}/conf/databricks_run.yml
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+
+      tasks:
+        - task_key: setup
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "setup"]
+
+        - task_key: bronze
+          depends_on: [{ task_key: setup }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "bronze"]
+
+        - task_key: silver
+          depends_on: [{ task_key: bronze }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "silver"]
+
+        - task_key: gold
+          depends_on: [{ task_key: silver }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "gold"]
+
+        - task_key: baseline
+          depends_on: [{ task_key: gold }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "baseline"]
+
+        - task_key: ml
+          depends_on: [{ task_key: gold }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "ml"]
+
+        - task_key: evaluate
+          depends_on: [{ task_key: baseline }, { task_key: ml }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "evaluate"]
+
+        - task_key: inventory
+          depends_on: [{ task_key: evaluate }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "inventory"]
+
+        - task_key: report
+          depends_on: [{ task_key: inventory }]
+          environment_key: default
+          python_wheel_task:
+            package_name: m5fc
+            entry_point: m5fc
+            parameters: ["--config", "{{job.parameters.config}}", "--stage", "report"]

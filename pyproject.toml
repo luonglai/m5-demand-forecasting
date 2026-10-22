@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "m5fc"
+version = "0.1.0"
+description = "M5 demand forecasting: PySpark medallion pipeline, statistical baseline vs. LightGBM, accuracy/bias/FVA and inventory impact"
+requires-python = ">=3.10"
+dependencies = [
+  "pandas>=2.0",
+  "numpy>=1.24",
+  "pyarrow>=14",
+  "pyyaml>=6",
+  "statsforecast>=1.7",
+  "lightgbm>=4.0",
+]
+
+[project.optional-dependencies]
+spark = ["pyspark>=3.5"]
+dev = ["pyspark>=3.5", "pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+m5fc = "m5fc.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
